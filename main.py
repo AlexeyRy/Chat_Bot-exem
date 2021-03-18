@@ -7,7 +7,7 @@ vk_session = vk_api.VkApi(token=main_token)
 session_api = vk_session.get_api()
 longpoll = VkLongPoll(vk_session)
 
-
+#Записываем нового юзера
 class User:
 	def __init__(self, id, mode, status):
 		self.id = id
@@ -15,7 +15,7 @@ class User:
 		self.status = status
 
 
-# ChatBot keyboard
+###################### ChatBot keyboard ###########################
 def get_but(text, color):
 	return {
 		"action": {
@@ -66,6 +66,18 @@ answer_key2 = {
 answer_key2 = json.dumps(answer_key2, ensure_ascii=False).encode('utf-8')
 answer_key2 = str(answer_key2.decode('utf-8'))
 
+teacher_key = {
+	"one_time": False,
+	"buttons": [
+		[get_but("Посмотреть результаты учеников", "positive")],
+		[get_but("Главное меню", "positive")]
+	]
+}
+teacher_key = json.dumps(teacher_key, ensure_ascii=False).encode('utf-8')
+teacher_key = str(teacher_key.decode('utf-8')
+####################################################
+
+
 
 def send(id, text, keyboard):
 	session_api.messages.send(user_id=id, message=text, random_id=0, keyboard=keyboard)
@@ -76,32 +88,54 @@ def send_photo(id, url):
 
 
 users = []
+teacher = ["483561779"]
+listTrueOrFalse = []
+type = True
+
+###Проверка заданного вопроса###
 trueAnswere = 0
+
+###Проверка варианта теста###
 var = 0
+
+###Проверка номера задания###
 number = 0
+
+###Проверка заданного вопроса###
 to_do = 1
+
+
 falseToDo = 0
 repair = 1
-listTrueOrFalse = []
 sch = 0
 phr = ''
 
+
+#Начала основного действия#
 for event in longpoll.listen():
 	if event.type == VkEventType.MESSAGE_NEW:
 		if event.to_me:
 			message = event.text.lower()
 			id = event.user_id
+			print(id)
 
+			###Проверка наличия пользователя в базе###
 			if message == 'начать' or message == 'главное меню':
 				flag1 = 0
-				for user in users:
-					if user.id == id:
+				for user in teacher:
+					print(user)
+					type = False
+
+				if type == True:
+					for user in users:
+						if user.id == id:
+							send(id, 'Выберите действие', menu_key)
+							user.mode = 'menu'
+							flag1 = 1
+					#Записываем человека в базу
+					if flag1 == 0:
+						users.append(User(id, 'menu', 0))
 						send(id, 'Выберите действие', menu_key)
-						user.mode = 'menu'
-						flag1 = 1
-				if flag1 == 0:
-					users.append(User(id, 'menu', 0))
-					send(id, 'Выберите действие', menu_key)
 
 			for user in users:
 				if user.id == id:
@@ -371,6 +405,7 @@ for event in longpoll.listen():
 									listTrueOrFalse.append(1)
 									falseToDo = 0
 									user.mode = 'menu'
+									#вывод результатов и советов по просмотру видео уроков
 									for i in range(0, 4):
 
 										#for j in listTrueOrFalse:
@@ -421,6 +456,7 @@ for event in longpoll.listen():
 										listTrueOrFalse.append(0)
 										falseToDo = 0
 										user.mode = 'menu'
+										# вывод результатов и советов по просмотру видео уроков
 										for i in range(0, 4):
 
 											#for j in listTrueOrFalse:
@@ -488,6 +524,8 @@ for event in longpoll.listen():
 									falseToDo = 0
 									user.mode = 'menu'
 									send(id, "Прекращаем тестирование", menu_key)
+
+									# вывод результатов и советов по просмотру видео уроков
 									for i in range(0, 4):
 
 										#for j in listTrueOrFalse:
@@ -499,7 +537,6 @@ for event in longpoll.listen():
 												blist = bool(listTrueOrFalse[l])
 												phr = phr + str(l + 1) + " " + str(blist) + " "
 											send(id, phr, menu_key)
-
 
 										if bool(listTrueOrFalse[i]) == False:
 											if i == 0:
